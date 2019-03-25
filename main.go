@@ -20,15 +20,15 @@ const PokemonImageSchema = "https://img.pokemondb.net/artwork/%v.jpg"
 
 var inputFilename, inputURL string
 
-type color struct {
+type Color struct {
 	R, G, B uint32
 }
 
-func newColor(r, g, b uint32) color {
-	return color{r, g, b}
+func NewColor(r, g, b uint32) Color {
+	return Color{r, g, b}
 }
 
-func (c *color) normalizeValue() {
+func (c *Color) normalizeValue() {
 	c.R = uint32(float64(c.R) / 65535 * 255)
 	c.G = uint32(float64(c.G) / 65535 * 255)
 	c.B = uint32(float64(c.B) / 65535 * 255)
@@ -48,7 +48,7 @@ func init() {
 	}
 }
 
-func getTrueColorEscapeString(upper, lower color) string {
+func getTrueColorEscapeString(upper, lower Color) string {
 	upper.normalizeValue()
 	lower.normalizeValue()
 	return fmt.Sprintf("\033[38;2;%v;%v;%vm\033[48;2;%v;%v;%vm▀\033[0m",
@@ -62,9 +62,23 @@ func traverseImage(image image.Image) {
 	for y := bounds.Min.Y; y < bounds.Max.Y; y += 2 {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			r, g, b, _ = image.At(x, y).RGBA()
-			upper := newColor(r, g, b)
+			upper := NewColor(r, g, b)
 			r, g, b, _ = image.At(x, y+1).RGBA()
-			lower := newColor(r, g, b)
+			lower := NewColor(r, g, b)
+			fmt.Printf("%v", getTrueColorEscapeString(upper, lower))
+		}
+		fmt.Print("\n")
+	}
+}
+
+func traverseImage_(image Image) {
+	image.ConvertToRGB()
+	rgbImage := image.RGB
+
+	for y := 0; y < image.height; y += 2 {
+		for x := 0; x < image.width; x++ {
+			upper := NewColor(rgbImage[y][x][0], rgbImage[y][x][1], rgbImage[y][x][2])
+			lower := NewColor(rgbImage[y+1][x][0], rgbImage[y+1][x][1], rgbImage[y+1][x][2])
 			fmt.Printf("%v", getTrueColorEscapeString(upper, lower))
 		}
 		fmt.Print("\n")
