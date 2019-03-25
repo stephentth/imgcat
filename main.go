@@ -19,7 +19,6 @@ const PokemonAPIEndpoint = "https://pokeapi.co/api/v2/pokemon/"
 const PokemonImageSchema = "https://img.pokemondb.net/artwork/%v.jpg"
 
 var inputFilename, inputURL string
-var inputRandom bool
 
 type color struct {
 	R, G, B uint32
@@ -38,13 +37,11 @@ func (c *color) normalizeValue() {
 func init() {
 	inputFilenameFlag := flag.String("i", "", "Input file to display")
 	inputURLFlag := flag.String("u", "", "Input URL to retrieve")
-	inputRandomFlag := flag.Bool("r", false, "Choose random pokemon")
 	flag.Parse()
 	inputFilename = *inputFilenameFlag
 	inputURL = *inputURLFlag
-	inputRandom = *inputRandomFlag
 
-	if inputFilename == "" && inputURL == "" && inputRandom == false {
+	if inputFilename == "" && inputURL == "" {
 		fmt.Printf("Usage of %s:\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(1)
@@ -78,19 +75,7 @@ func main() {
 	var data io.Reader
 	var err error
 
-	if inputRandom == true {
-		pokemonName, err := GetRandomPokemon(0)
-		if err != nil {
-			fmt.Println("Network error")
-			os.Exit(1)
-		}
-		fmt.Println("Got pokemon", pokemonName)
-		data, err = GetImageFromHTTP(fmt.Sprintf(PokemonImageSchema, pokemonName))
-		if err != nil {
-			fmt.Println("Network error")
-			os.Exit(1)
-		}
-	} else if inputFilename != "" {
+	if inputFilename != "" {
 		data, err = os.Open(inputFilename)
 		if err != nil {
 			fmt.Println("Invalid file input")
