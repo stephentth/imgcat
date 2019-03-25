@@ -2,6 +2,8 @@ package main
 
 import (
 	"image"
+	_ "image/gif"
+	_ "image/jpeg"
 	"io"
 )
 
@@ -12,15 +14,27 @@ type Image struct {
 }
 
 func NewImage(height, width int) *Image {
-	return &Image{
-		RGBA: make3DArray(height, width, 4),
+	image := &Image{
+		height: height,
+		width:  width,
 	}
+	if height%2 == 1 {
+		image.height++
+	}
+	image.RGBA = make3DArray(height, width, 4)
+	if height%2 == 1 {
+		image.RGBA[image.height-1] = make([][]uint32, width)
+		for i := range image.RGBA[image.height-1] {
+			image.RGBA[image.height-1][i] = make([]uint32, 4)
+		}
+	}
+	return image
 }
 
 func (i *Image) ConvertToRGB() {
 	i.RGB = make3DArray(i.height, i.width, 3)
 	for y := range i.RGBA {
-		for x := range i.RGBA {
+		for x := range i.RGBA[y] {
 			r, g, b, _ := i.RGBA[y][x][0], i.RGBA[y][x][1], i.RGBA[y][x][2], i.RGBA[y][x][3]
 
 			i.RGB[y][x][0] = r
