@@ -4,7 +4,11 @@
 
 My little weekend side project. Load an image and display it into terminal. Can fetch image from internet.
 
-Blog: TBA
+Features:
+* Ouput image 1 pixel per glygh
+* Can fetch image from remote
+* Glob pattern
+* Auto analize your terminal size and scale output image base on it.
 
 ## Screenshot
 
