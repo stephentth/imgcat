@@ -2,21 +2,33 @@
 
 ## Introduce
 
-My little weekend side project. Load an image and display it into terminal. Can fetch image from internet.
+A simple utily to render an image to terminal. Support fetch from the internet.
 
 Features:
-* Ouput image 1 pixel per glygh
+* Ouput image 2 pixel per glygh
 * Can fetch image from remote
-* Glob pattern
 * Auto analize your terminal size and scale output image base on it.
 
-## Screenshot
+## Screenshots
 
-![Screenshot](docs/images/screenshot01.png)
+<center>
+    <p>Simple cat an image local</p>
+    <img src="docs/images/screenshot01.png">
+    <p>Simple cat an image remote</p>
+    <img src="docs/images/screenshot01.png">
+</center>
 
 ## Install
 
-TBA
+If you have go installed in your system.
+
+```
+go get -u github.com/stephentt-me/imgcat
+```
+
+Make sure `$GOPATH/bin` is in your `$PATH`.
+
+Or [download binary here](#) and put it into your `$PATH`.
 
 ## Usage
 
@@ -29,3 +41,18 @@ imgcat foo.jpg
 ```
 imgcat <url>
 ```
+
+Render glob
+```
+imgcat *.jpg
+```
+
+Option:
+```
+-h  Help
+-q  Quite
+```
+
+## License
+
+MIT.
