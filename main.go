@@ -20,13 +20,10 @@ func parseInput() ([]string, []string) {
 	}
 
 	for _, item := range flag.Args() {
-		if IsValidUrl(item) {
+		if IsValidURL(item) {
 			urlInput = append(urlInput, item)
-		} else if IsValidFile(item) {
-			fileInput = append(fileInput, item)
 		} else {
-			fmt.Printf("%v is not a valid input (neigher valid file nor url)\n", item)
-			os.Exit(1)
+			fileInput = append(fileInput, item)
 		}
 	}
 	return fileInput, urlInput

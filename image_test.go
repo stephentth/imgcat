@@ -5,29 +5,31 @@ import (
 	"testing"
 )
 
-func TestMake3DArray(t *testing.T) {
-	array := make3DArray(3, 3, 3)
-	if array[2][2][2] != 0 {
+func TestNewEmptyImage(t *testing.T) {
+	image := NewEmptyImage(3, 3)
+	if image.height != 4 || image.width != 3 {
+		t.Fatal()
+	}
+	if len(image.RGBA) != 4 || len(image.RGBA[0]) != 3 {
+		t.Fatal()
+	}
+	if len(image.RGB) != 4 || len(image.RGB[0]) != 3 {
 		t.Fatal()
 	}
 }
 
-func TestCreateImage(t *testing.T) {
-	image := NewEmptyImage(99, 100)
-	if image.height != 100 || len(image.RGBA[99][99]) != 4 {
-		t.Fatal()
-	}
-}
+func TestSmokeLoadImage(t *testing.T) {
+	files := []string{"test/artifacts/4.jpg", "test/artifacts/9.jpg"}
+	for _, file := range files {
+		file, err := os.Open(file)
+		if err != nil {
+			t.Fatal("test artifact open err")
+		}
 
-func TestLoadImage(t *testing.T) {
-	file, err := os.Open("test/artifacts/drawer.jpg")
-	if err != nil {
-		t.Fatal("test artifact open err")
+		image, err := LoadImage(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		image.Render()
 	}
-
-	image, err := LoadImage(file)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_ = image
 }

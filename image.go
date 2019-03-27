@@ -9,30 +9,28 @@ import (
 	"io"
 )
 
+// Image modeling a color image (in RGB and RGBA)
 type Image struct {
 	height, width int
-	RGBA          [][][]uint32
-	RGB           [][][]uint32
+	RGBA          [][]Color
+	RGB           [][]Color
 }
 
+// NewEmptyImage return an empty (all black) Image instance with height and width
 func NewEmptyImage(height, width int) *Image {
+	if height%2 == 1 {
+		height++
+	}
 	image := &Image{
 		height: height,
 		width:  width,
 	}
-	if height%2 == 1 {
-		image.height++
-	}
-	image.RGBA = make3DArray(height, width, 4)
-	if height%2 == 1 {
-		image.RGBA[image.height-1] = make([][]uint32, width)
-		for i := range image.RGBA[image.height-1] {
-			image.RGBA[image.height-1][i] = make([]uint32, 4)
-		}
-	}
+	image.RGBA = New2DColorArray(height, width)
+	image.RGB = New2DColorArray(height, width)
 	return image
 }
 
+// LoadImage get a Image from io.Reader
 func LoadImage(file io.Reader) (*Image, error) {
 	imgData, _, err := image.Decode(file)
 	if err != nil {
@@ -48,55 +46,64 @@ func LoadImage(file io.Reader) (*Image, error) {
 	for y := bounds.Min.Y; y < height; y++ {
 		for x := bounds.Min.X; x < width; x++ {
 			r, g, b, a = imgData.At(x, y).RGBA()
-			image.RGBA[y][x] = []uint32{r, g, b, a}
+			image.RGBA[y][x] = New16BitRGBAColor(r, g, b, a)
 		}
 	}
 	return image, nil
 }
 
+// ConvertToRGB convert this Image to RGB color code
 func (i *Image) ConvertToRGB() {
-	i.RGB = make3DArray(i.height, i.width, 3)
 	for y := range i.RGBA {
 		for x := range i.RGBA[y] {
-			r, g, b, _ := i.RGBA[y][x][0], i.RGBA[y][x][1], i.RGBA[y][x][2], i.RGBA[y][x][3]
+			r, g, b, a := i.RGBA[y][x].R, i.RGBA[y][x].G, i.RGBA[y][x].B, i.RGBA[y][x].A
+			_ = a
 
-			i.RGB[y][x][0] = r
-			i.RGB[y][x][1] = g
-			i.RGB[y][x][2] = b
+			i.RGB[y][x].R = r
+			i.RGB[y][x].G = g
+			i.RGB[y][x].B = b
 		}
 	}
 }
 
-func (image *Image) Render() {
+// Convert8Bit convert this Image to 8bit color code
+func (i *Image) Convert8Bit() {
+	for y := range i.RGBA {
+		for x := range i.RGBA[y] {
+			i.RGBA[y][x].Convert8Bit()
+			i.RGB[y][x].Convert8Bit()
+		}
+	}
+}
+
+// Render this Image to ANSI color code and output to stdout
+func (image Image) Render() error {
+	colSize, _, err := GetTerminalSize()
+	if err != nil {
+		return err
+	}
+	if image.width > colSize {
+		newHeight := int(float64(colSize) / float64(image.width) * float64(image.height))
+		image = NearestNeighborResampling(image, newHeight, colSize)
+	}
 	image.ConvertToRGB()
+	image.Convert8Bit()
 	rgbImage := image.RGB
 	var upper, lower Color
 
 	for y := 0; y < image.height; y += 2 {
 		for x := 0; x < image.width; x++ {
-			upper = NewColor(rgbImage[y][x][0], rgbImage[y][x][1], rgbImage[y][x][2])
-			lower = NewColor(rgbImage[y+1][x][0], rgbImage[y+1][x][1], rgbImage[y+1][x][2])
+			upper = New16BitRGBAColor(rgbImage[y][x].R, rgbImage[y][x].G, rgbImage[y][x].B, rgbImage[y][x].A)
+			lower = New16BitRGBAColor(rgbImage[y+1][x].R, rgbImage[y+1][x].G, rgbImage[y+1][x].B, rgbImage[y+1][x].A)
 			fmt.Printf("%v", getTrueColorEscapeString(upper, lower))
 		}
 		fmt.Print("\n")
 	}
+	return nil
 }
 
-func make3DArray(n, m, d int) (matrix [][][]uint32) {
-	matrix = make([][][]uint32, n)
-
-	for i := range matrix {
-		matrix[i] = make([][]uint32, m)
-		for j := range matrix[i] {
-			matrix[i][j] = make([]uint32, d)
-		}
-	}
-	return
-}
-
+// getTrueColorEscapeString convert 2 pixel color to ANSI sequence code
 func getTrueColorEscapeString(upper, lower Color) string {
-	upper.NormalizeValue()
-	lower.NormalizeValue()
 	return fmt.Sprintf("\033[38;2;%v;%v;%vm\033[48;2;%v;%v;%vm▀\033[0m",
 		upper.R, upper.G, upper.B, lower.R, lower.G, lower.B)
 }
