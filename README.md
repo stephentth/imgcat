@@ -28,7 +28,7 @@ go get -u github.com/stephentt-me/imgcat
 
 Make sure `$GOPATH/bin` is in your `$PATH`.
 
-Or [download binary here](#) and put it into your `$PATH`.
+Or [download binary here](https://github.com/stephentt-me/imgcat/releases) and put it into your `$PATH`.
 
 ## Usage
 
