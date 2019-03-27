@@ -42,6 +42,19 @@ imgcat foo.jpg
 imgcat <url>
 ```
 
+## Development
+
+To build from source, after clone this repo, run:
+```
+make build
+```
+
+Run unitest:
+
+```
+make test
+```
+
 ## License
 
 MIT
