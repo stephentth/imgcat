@@ -1,9 +1,9 @@
 version: 2
 jobs:
-  build:
+  test:
     docker:
-      - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+      - image: circleci/golang:1.12
+    working_directory: /app
     steps:
       - checkout
       - run: go test -v ./...
