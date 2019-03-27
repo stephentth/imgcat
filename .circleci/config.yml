@@ -1,5 +1,12 @@
 version: 2
 jobs:
+  build:
+      docker:
+        - image: circleci/golang:1.12
+      working_directory: /app
+      steps:
+        - checkout
+        - run: go build
   test:
     docker:
       - image: circleci/golang:1.12
@@ -7,3 +14,10 @@ jobs:
     steps:
       - checkout
       - run: go test -v ./...
+
+workflows:
+  version: 2
+  default-workflow:
+    jobs:
+      - build
+      - test
