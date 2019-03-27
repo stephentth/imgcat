@@ -2,20 +2,20 @@
 
 ## Introduce
 
-A simple utily to render an image to terminal. Support fetch from the internet.
+A simple utily to render an image to terminal. Support load image from local disk and from image url.
 
 Features:
-* Ouput image 2 pixel per glygh
-* Can fetch image from remote
+* Ouput image 2 pixel per glyph.
+* Can fetch image from url.
 * Auto analize your terminal size and scale output image base on it.
 
 ## Screenshots
 
 <center>
     <p>Simple cat an image local</p>
-    <img src="docs/images/screenshot01.png">
+    <img src="docs/images/screenshot_02.png">
     <p>Simple cat an image remote</p>
-    <img src="docs/images/screenshot01.png">
+    <img src="docs/images/screenshot_01.png">
 </center>
 
 ## Install
@@ -42,17 +42,6 @@ imgcat foo.jpg
 imgcat <url>
 ```
 
-Render glob
-```
-imgcat *.jpg
-```
-
-Option:
-```
--h  Help
--q  Quite
-```
-
 ## License
 
-MIT.
+MIT
