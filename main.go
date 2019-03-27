@@ -7,69 +7,63 @@ import (
 	"os"
 )
 
-var inputFilename, inputURL string
-
-func init() {
-	inputFilenameFlag := flag.String("i", "", "Input file to display")
-	inputURLFlag := flag.String("u", "", "Input URL to retrieve")
+// parseInput
+// imgcat can receive 2 type of input (can receive in mix), filename of local disk image, or url of an image
+// this function get all of the parammeters and return 2 array
+func parseInput() ([]string, []string) {
 	flag.Parse()
-	inputFilename = *inputFilenameFlag
-	inputURL = *inputURLFlag
+	var fileInput, urlInput []string
 
-	if inputFilename == "" && inputURL == "" {
-		fmt.Printf("Usage of %s:\n", os.Args[0])
-		flag.PrintDefaults()
+	if flag.NArg() == 0 {
+		fmt.Println("Please provide inputs")
 		os.Exit(1)
 	}
-}
 
-func getTrueColorEscapeString(upper, lower Color) string {
-	upper.NormalizeValue()
-	lower.NormalizeValue()
-	return fmt.Sprintf("\033[38;2;%v;%v;%vm\033[48;2;%v;%v;%vm▀\033[0m",
-		upper.R, upper.G, upper.B, lower.R, lower.G, lower.B)
-}
-
-func traverseImage(image Image) {
-	image.ConvertToRGB()
-	rgbImage := image.RGB
-	var upper, lower Color
-
-	for y := 0; y < image.height; y += 2 {
-		for x := 0; x < image.width; x++ {
-			upper = NewColor(rgbImage[y][x][0], rgbImage[y][x][1], rgbImage[y][x][2])
-			lower = NewColor(rgbImage[y+1][x][0], rgbImage[y+1][x][1], rgbImage[y+1][x][2])
-			fmt.Printf("%v", getTrueColorEscapeString(upper, lower))
+	for _, item := range flag.Args() {
+		if IsValidUrl(item) {
+			urlInput = append(urlInput, item)
+		} else if IsValidFile(item) {
+			fileInput = append(fileInput, item)
+		} else {
+			fmt.Printf("%v is not a valid input (neigher valid file nor url)\n", item)
+			os.Exit(1)
 		}
-		fmt.Print("\n")
 	}
+	return fileInput, urlInput
 }
 
 func main() {
+	fileInput, urlInput := parseInput()
 	var data io.Reader
 	var err error
 
-	if inputFilename != "" {
-		data, err = os.Open(inputFilename)
+	for _, filename := range fileInput {
+		data, err = os.Open(filename)
 		if err != nil {
 			fmt.Println("Invalid file input")
 			os.Exit(1)
 		}
-	} else if inputURL != "" {
-		data, err = GetImageFromHTTP(inputURL)
+
+		image, err := LoadImage(data)
+		if err != nil {
+			fmt.Printf("File %v can not be load.\n", filename)
+			os.Exit(1)
+		}
+		image.Render()
+	}
+
+	for _, url := range urlInput {
+		data, err = GetImageFromHTTP(url)
 		if err != nil {
 			fmt.Println("Network error")
 			os.Exit(1)
 		}
-	} else {
-		os.Exit(1)
-	}
 
-	image, err := LoadImage(data)
-	if err != nil {
-		fmt.Println("Must provide valid input")
-		os.Exit(1)
+		image, err := LoadImage(data)
+		if err != nil {
+			fmt.Printf("URL %v can not be load.\n", url)
+			os.Exit(1)
+		}
+		image.Render()
 	}
-
-	traverseImage(*image)
 }

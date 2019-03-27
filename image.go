@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	_ "image/gif"
 	_ "image/jpeg"
+	_ "image/png"
 	"io"
 )
 
@@ -13,7 +15,7 @@ type Image struct {
 	RGB           [][][]uint32
 }
 
-func NewImage(height, width int) *Image {
+func NewEmptyImage(height, width int) *Image {
 	image := &Image{
 		height: height,
 		width:  width,
@@ -31,6 +33,27 @@ func NewImage(height, width int) *Image {
 	return image
 }
 
+func LoadImage(file io.Reader) (*Image, error) {
+	imgData, _, err := image.Decode(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var r, g, b, a uint32
+	bounds := imgData.Bounds()
+	height := bounds.Max.Y
+	width := bounds.Max.X
+	image := NewEmptyImage(height, width)
+
+	for y := bounds.Min.Y; y < height; y++ {
+		for x := bounds.Min.X; x < width; x++ {
+			r, g, b, a = imgData.At(x, y).RGBA()
+			image.RGBA[y][x] = []uint32{r, g, b, a}
+		}
+	}
+	return image, nil
+}
+
 func (i *Image) ConvertToRGB() {
 	i.RGB = make3DArray(i.height, i.width, 3)
 	for y := range i.RGBA {
@@ -41,6 +64,21 @@ func (i *Image) ConvertToRGB() {
 			i.RGB[y][x][1] = g
 			i.RGB[y][x][2] = b
 		}
+	}
+}
+
+func (image *Image) Render() {
+	image.ConvertToRGB()
+	rgbImage := image.RGB
+	var upper, lower Color
+
+	for y := 0; y < image.height; y += 2 {
+		for x := 0; x < image.width; x++ {
+			upper = NewColor(rgbImage[y][x][0], rgbImage[y][x][1], rgbImage[y][x][2])
+			lower = NewColor(rgbImage[y+1][x][0], rgbImage[y+1][x][1], rgbImage[y+1][x][2])
+			fmt.Printf("%v", getTrueColorEscapeString(upper, lower))
+		}
+		fmt.Print("\n")
 	}
 }
 
@@ -56,23 +94,9 @@ func make3DArray(n, m, d int) (matrix [][][]uint32) {
 	return
 }
 
-func LoadImage(file io.Reader) (*Image, error) {
-	imgData, _, err := image.Decode(file)
-	if err != nil {
-		return nil, err
-	}
-
-	var r, g, b, a uint32
-	bounds := imgData.Bounds()
-	height := bounds.Max.Y
-	width := bounds.Max.X
-	image := NewImage(height, width)
-
-	for y := bounds.Min.Y; y < height; y++ {
-		for x := bounds.Min.X; x < width; x++ {
-			r, g, b, a = imgData.At(x, y).RGBA()
-			image.RGBA[y][x] = []uint32{r, g, b, a}
-		}
-	}
-	return image, nil
+func getTrueColorEscapeString(upper, lower Color) string {
+	upper.NormalizeValue()
+	lower.NormalizeValue()
+	return fmt.Sprintf("\033[38;2;%v;%v;%vm\033[48;2;%v;%v;%vm▀\033[0m",
+		upper.R, upper.G, upper.B, lower.R, lower.G, lower.B)
 }

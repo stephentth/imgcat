@@ -13,7 +13,7 @@ func TestMake3DArray(t *testing.T) {
 }
 
 func TestCreateImage(t *testing.T) {
-	image := NewImage(99, 100)
+	image := NewEmptyImage(99, 100)
 	if image.height != 100 || len(image.RGBA[99][99]) != 4 {
 		t.Fatal()
 	}
